@@ -45,12 +45,12 @@ public:
              << birthdate << " " << address << " " << phone << endl;
     }
 
-    string getBirthdate() { return birthdate; }
-    string getSurname() { return surname; }
-    string getName() { return name; }
-    string getPatronymic() { return patronymic; }
-    string getAddress() { return address; }
-    string getPhone() { return phone; }
+    string getBirthdate() const { return birthdate; }
+    string getSurname() const { return surname; }
+    string getName() const { return name; }
+    string getPatronymic() const { return patronymic; }
+    string getAddress() const { return address; }
+    string getPhone() const { return phone; }
 
     void setSurname(string s) { surname = s; }
     void setName(string n) { name = n; }
@@ -75,6 +75,14 @@ public:
             cout << "[" << i << "] ";
             friends[i].print();
         }
+    }
+
+    const Friend& get_friend(int index) const {
+        return friends[index];
+    }
+
+    int get_count() const {
+        return friend_count;
     }
 
     FriendsManager& operator+(const Friend& new_friend) {
@@ -108,6 +116,35 @@ public:
             friend_count--;
         }
         return *this;
+    }
+
+    // Оператор присваивания
+    FriendsManager& operator=(const FriendsManager& other) {
+        if (this != &other) {
+            friend_count = other.friend_count;
+            for (int i = 0; i < friend_count; i++) {
+                friends[i] = other.friends[i];
+            }
+        }
+        return *this;
+    }
+
+    // Оператор сравнения
+    bool operator==(const FriendsManager& other) const {
+        if (get_count() != other.get_count()) {
+            return false;
+        }
+        for (int i = 0; i < get_count(); i++) {
+            if (get_friend(i).getSurname() != other.get_friend(i).getSurname() ||
+                get_friend(i).getName() != other.get_friend(i).getName() ||
+                get_friend(i).getPatronymic() != other.get_friend(i).getPatronymic() ||
+                get_friend(i).getBirthdate() != other.get_friend(i).getBirthdate() ||
+                get_friend(i).getAddress() != other.get_friend(i).getAddress() ||
+                get_friend(i).getPhone() != other.get_friend(i).getPhone()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     void add_friend() {
