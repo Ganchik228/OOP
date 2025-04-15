@@ -91,7 +91,7 @@ void get_friends_by_birthmonth()
    }
 }
 
-int main() 
+int main()
 {
    load_friends_from_file();
    int choice;

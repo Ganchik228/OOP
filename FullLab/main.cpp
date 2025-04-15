@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
+#include <vector>
 #include <string>
+
 using namespace std;
 
 class Friend {
@@ -13,271 +15,137 @@ private:
     string phone;
 
 public:
-    Friend() {
-        surname = "";
-        name = "";
-        patronymic = "";
-        birthdate = "";
-        address = "";
-        phone = "";
-    }
+    Friend() : surname("Иванов"), name("Иван"), patronymic("Иванович"),
+               birthdate("01.01.2000"), address("ул. Ленина, 1"), phone("+71234567890") {}
 
-    Friend(string s, string n, string p, string b, string a, string ph) {
-        surname = s;
-        name = n;
-        patronymic = p;
-        birthdate = b;
-        address = a;
-        phone = ph;
-    }
+    Friend(const string& sname, const string& nname) : surname(sname), name(nname),
+        patronymic(""), birthdate(""), address(""), phone("") {}
 
-    Friend(string s, string n, string b) {
-        surname = s;
-        name = n;
-        patronymic = "";
-        birthdate = b;
-        address = "";
-        phone = "";
-    }
+    Friend(const string& sname, const string& nname, const string& patr,
+           const string& bdate, const string& addr, const string& ph) :
+        surname(sname), name(nname), patronymic(patr),
+        birthdate(bdate), address(addr), phone(ph) {}
 
-    void print() {
-        cout << surname << " " << name << " " << patronymic << " " 
+    void print() const {
+        cout << surname << " " << name << " " << patronymic << " "
              << birthdate << " " << address << " " << phone << endl;
     }
 
-    string getBirthdate() const { return birthdate; }
     string getSurname() const { return surname; }
     string getName() const { return name; }
     string getPatronymic() const { return patronymic; }
+    string getBirthdate() const { return birthdate; }
     string getAddress() const { return address; }
     string getPhone() const { return phone; }
-
-    void setSurname(string s) { surname = s; }
-    void setName(string n) { name = n; }
-    void setPatronymic(string p) { patronymic = p; }
-    void setBirthdate(string b) { birthdate = b; }
-    void setAddress(string a) { address = a; }
-    void setPhone(string ph) { phone = ph; }
 };
 
-class FriendsManager {
+
+class App {
 private:
-    Friend friends[100];
-    int friend_count;
+    vector<Friend> friends;
 
 public:
-    FriendsManager() {
-        friend_count = 0;
-    }
-
-    void print_friends() {
-        for (int i = 0; i < friend_count; i++) {
-            cout << "[" << i << "] ";
-            friends[i].print();
+    void printFriends() const {
+        for (const auto& f : friends) {
+            f.print();
         }
     }
 
-    const Friend& get_friend(int index) const {
-        return friends[index];
+    void addFriend(const Friend& f) {
+        friends.push_back(f);
     }
 
-    int get_count() const {
-        return friend_count;
-    }
-
-    FriendsManager& operator+(const Friend& new_friend) {
-        if (friend_count < 100) {
-            friends[friend_count++] = new_friend;
+    void deleteFriend(int index) {
+        if (index < 0 || index >= friends.size()) {
+            cout << "Неверный индекс" << endl;
+            return;
         }
-        return *this;
+        friends.erase(friends.begin() + index);
     }
 
-    FriendsManager& operator-(int index) {
-        if (index >= 0 && index < friend_count) {
-            for (int i = index; i < friend_count - 1; i++) {
-                friends[i] = friends[i + 1];
-            }
-            friend_count--;
+    void saveToFile(const string& filename) const {
+        ofstream fout(filename);
+        for (const auto& f : friends) {
+            fout << f.getSurname() << " " << f.getName() << " " 
+                 << f.getPatronymic() << " " << f.getBirthdate() << " "
+                 << f.getAddress() << " " << f.getPhone() << endl;
         }
-        return *this;
     }
 
-    // Префиксный инкремент (++manager) - добавляет тестового друга
-    FriendsManager& operator++() {
-        if (friend_count < 100) {
-            friends[friend_count++] = Friend("Иванов", "Иван", "Иванович", "12.12.2012", "Ленина", "12345678");
+    void loadFromFile(const string& filename) {
+        ifstream fin(filename);
+        friends.clear();
+        string sname, name, patr, bdate, addr, ph;
+        while (fin >> sname >> name >> patr >> bdate >> addr >> ph) {
+            friends.emplace_back(sname, name, patr, bdate, addr, ph);
         }
-        return *this;
     }
 
-    // Префиксный декремент (--manager) - удаляет последнего друга
-    FriendsManager& operator--() {
-        if (friend_count > 0) {
-            friend_count--;
-        }
-        return *this;
-    }
-
-    // Оператор присваивания
-    FriendsManager& operator=(const FriendsManager& other) {
-        if (this != &other) {
-            friend_count = other.friend_count;
-            for (int i = 0; i < friend_count; i++) {
-                friends[i] = other.friends[i];
-            }
-        }
-        return *this;
-    }
-
-    // Оператор сравнения
-    bool operator==(const FriendsManager& other) const {
-        if (get_count() != other.get_count()) {
-            return false;
-        }
-        for (int i = 0; i < get_count(); i++) {
-            if (get_friend(i).getSurname() != other.get_friend(i).getSurname() ||
-                get_friend(i).getName() != other.get_friend(i).getName() ||
-                get_friend(i).getPatronymic() != other.get_friend(i).getPatronymic() ||
-                get_friend(i).getBirthdate() != other.get_friend(i).getBirthdate() ||
-                get_friend(i).getAddress() != other.get_friend(i).getAddress() ||
-                get_friend(i).getPhone() != other.get_friend(i).getPhone()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    void add_friend() {
-        string s, n, p, b, a, ph;
-        cout << "Enter friend's surname: ";
-        cin >> s;
-        cout << "Enter friend's name: ";
-        cin >> n;
-        cout << "Enter friend's patronymic: ";
-        cin >> p;
-        cout << "Enter friend's birthdate: ";
-        cin >> b;
-        cout << "Enter friend's address: ";
-        cin >> a;
-        cout << "Enter friend's phone: ";
-        cin >> ph;
-
-        *this + Friend(s, n, p, b, a, ph);
-    }
-
-    void delete_friend() {
-        int index;
-        cout << "Enter index of friend to delete: ";
-        cin >> index;
-        *this - index;
-    }
-
-    void save_to_file() {
-        ofstream f("friends.txt");
-        for (int i = 0; i < friend_count; i++) {
-            f << friends[i].getSurname() << " " 
-              << friends[i].getName() << " "
-              << friends[i].getPatronymic() << " "
-              << friends[i].getBirthdate() << " "
-              << friends[i].getAddress() << " "
-              << friends[i].getPhone() << endl;
-        }
-        f.close();
-    }
-
-    void load_from_file() {
-        ifstream f("friends.txt");
-        friend_count = 0;
-        
-        string s, n, p, b, a, ph;
-        while (f >> s >> n >> p >> b >> a >> ph) {
-            friends[friend_count] = Friend(s, n, p, b, a, ph);
-            friend_count++;
-        }
-        f.close();
-    }
-
-    void get_by_birthmonth() {
-        int month;
-        cout << "Enter birth month: ";
-        cin >> month;
-        
-        for (int i = 0; i < friend_count; i++) {
-            string bdate = friends[i].getBirthdate();
+    void getFriendsByBirthmonth(int month) const {
+        for (const auto& f : friends) {
             int fmonth;
-            sscanf(bdate.c_str(), "%*d.%d.%*d", &fmonth);
-            
+            sscanf(f.getBirthdate().c_str(), "%*d.%d.%*d", &fmonth);
             if (fmonth == month) {
-                friends[i].print();
+                f.print();
             }
         }
     }
 };
 
+
 int main() {
-    FriendsManager manager;
-    manager.load_from_file();
-    
+    App app;
+    app.loadFromFile("friends.txt");
+
     int choice;
     do {
         cout << "1. Print friends" << endl;
-        cout << "2. Add friend (old method)" << endl;
-        cout << "3. Delete friend (old method)" << endl;
+        cout << "2. Add friend" << endl;
+        cout << "3. Delete friend" << endl;
         cout << "4. Get friends by birth month" << endl;
         cout << "5. Exit" << endl;
-        cout << "6. Add friend (+ operator)" << endl;
-        cout << "7. Delete friend (- operator)" << endl;
-        cout << "8. Add test friend (++ operator)" << endl;
-        cout << "9. Remove last friend (-- operator)" << endl;
         cout << "Enter choice: ";
         cin >> choice;
-        
+
         switch (choice) {
             case 1:
-                manager.print_friends();
+                app.printFriends();
                 break;
-            case 2:
-                manager.add_friend();
-                break;
-            case 3:
-                manager.delete_friend();
-                break;
-            case 4:
-                manager.get_by_birthmonth();
-                break;
-            case 6: {
-                string s, n, p, b, a, ph;
+            case 2: {
+                string sname, name, patr, bdate, addr, ph;
                 cout << "Enter friend's surname: ";
-                cin >> s;
+                cin >> sname;
                 cout << "Enter friend's name: ";
-                cin >> n;
+                cin >> name;
                 cout << "Enter friend's patronymic: ";
-                cin >> p;
+                cin >> patr;
                 cout << "Enter friend's birthdate: ";
-                cin >> b;
+                cin >> bdate;
                 cout << "Enter friend's address: ";
-                cin >> a;
+                cin.ignore();
+                getline(cin, addr);
                 cout << "Enter friend's phone: ";
                 cin >> ph;
-                manager + Friend(s, n, p, b, a, ph);
+                app.addFriend(Friend(sname, name, patr, bdate, addr, ph));
                 break;
             }
-            case 7: {
+            case 3: {
                 int index;
                 cout << "Enter index of friend to delete: ";
                 cin >> index;
-                manager - index;
+                app.deleteFriend(index);
                 break;
             }
-            case 8:
-                ++manager;
+            case 4: {
+                int month;
+                cout << "Enter birth month: ";
+                cin >> month;
+                app.getFriendsByBirthmonth(month);
                 break;
-            case 9:
-                --manager;
-                break;
+            }
         }
     } while (choice != 5);
-    
-    manager.save_to_file();
+
+    app.saveToFile("friends.txt");
     return 0;
 }
